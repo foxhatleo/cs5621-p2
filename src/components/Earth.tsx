@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import Globe, {GlobeMethods} from "react-globe.gl";
 import {StateVector} from "../data/FlightDataManager";
+import {FlightsByAircraft} from "../data/FlightData";
 import * as THREE from "three";
 
 const viewportSize = () => {
@@ -60,6 +61,43 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     setGlobeRadius(myGlobe.current?.getGlobeRadius() || 0);
     myGlobe.current?.pointOfView({ altitude: 3.5 });
   }, []);
+
+
+  // IDLE ANIMATION
+  const [seconds, setSeconds] = useState(0);
+  const [isIdle, setIsIdle] = useState(true);
+
+  function reset() {
+    setSeconds(0);
+    setIsIdle(false);
+  }
+
+  useEffect(() => {
+    if (isIdle) {
+      setInterval(() => {
+        setSeconds(seconds => seconds + 1);
+      }, 1000);
+      document.onmousemove = reset;
+    } else if (!isIdle && seconds >= 5) {
+      setIsIdle(true)
+    }
+  });
+
+  useEffect(() => {
+    if(!isIdle) return;
+    const item = p.flights[Math.floor(Math.random()*p.flights.length)];
+    const icao = item.icao24
+ 
+    const [flight, setFlight] = useState<FlightsByAircraft[]>([]);
+
+    const flightUpdater = (res: FlightsByAircraft[]) => {
+      setFlight(res);
+    };
+
+    const f = {setFlight : flightUpdater, ICAO : icao}
+    console.log(flight[0].estDepartureAirport)
+    console.log(flight[0].estArrivalAirport)
+  })
 
   return (
     <>
