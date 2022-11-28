@@ -73,31 +73,27 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
   }
 
   useEffect(() => {
-    if (isIdle) {
-      setInterval(() => {
-        setSeconds(seconds => seconds + 1);
-      }, 1000);
-      document.onmousemove = reset;
-    } else if (!isIdle && seconds >= 5) {
-      setIsIdle(true)
-    }
+    const interval = setInterval(() => { 
+      setSeconds(seconds => seconds + 1)
+      if (isIdle) {
+        document.onclick = reset
+      } else if (!isIdle && seconds >= 5) {
+        setIsIdle(true);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
   });
 
+  const [flight, setFlight] = useState<FlightsByAircraft[]>([]);
   useEffect(() => {
     if(!isIdle) return;
     const item = p.flights[Math.floor(Math.random()*p.flights.length)];
-    const icao = item.icao24
- 
-    const [flight, setFlight] = useState<FlightsByAircraft[]>([]);
-
-    const flightUpdater = (res: FlightsByAircraft[]) => {
-      setFlight(res);
-    };
-
-    const f = {setFlight : flightUpdater, ICAO : icao}
-    console.log(flight[0].estDepartureAirport)
-    console.log(flight[0].estArrivalAirport)
-  })
+    if (item) {
+      let icao = item.icao24
+      console.log(icao)
+    } 
+  }) 
 
   return (
     <>
