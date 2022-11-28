@@ -35,26 +35,5 @@ async function getFlightsByAircraft(ICAO: string, rewind: number = 86400): Promi
   }));
 }
 
-export type FlightManagerProps = {
-  setFlight: (flight: FlightsByAircraft[]) => void;
-  ICAO: string;
-};
 
-const FlightManager: React.ComponentType<FlightManagerProps> = (p) => {
-  useEffect(() => {
-    const allFlights = getFlightsByAircraft(p.ICAO);
-    allFlights.then((res) => {
-      if (res == null) {
-        alert("Cannot get flight data.");
-        return;
-      }
-      console.log("All flights has been acquired.");
-      console.dir(res);
-      p.setFlight(res);
-    });
-  }, []);
-
-  return (<></>);
-};
-
-export default FlightManager; 
+export default getFlightsByAircraft; 

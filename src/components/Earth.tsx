@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import Globe, {GlobeMethods} from "react-globe.gl";
 import {StateVector} from "../data/FlightDataManager";
-import {FlightsByAircraft} from "../data/FlightData";
+import getFlightsByAircraft, {FlightsByAircraft} from "../data/FlightData";
 import * as THREE from "three";
 
 const viewportSize = () => {
@@ -85,14 +85,17 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     return () => clearInterval(interval);
   });
 
-  const [flight, setFlight] = useState<FlightsByAircraft[]>([]);
   useEffect(() => {
-    if(!isIdle) return;
-    const item = p.flights[Math.floor(Math.random()*p.flights.length)];
-    if (item) {
-      let icao = item.icao24
-      console.log(icao)
-    } 
+    const interval = setInterval(async () => { 
+      if(!isIdle) return;
+      const item = p.flights[Math.floor(Math.random()*p.flights.length)];
+      if (item) {
+        let icao = item.icao24
+        const a = await getFlightsByAircraft(icao)
+        console.log(a)
+      } 
+    }, 1000);
+    return () => clearInterval(interval);
   }) 
 
   return (
