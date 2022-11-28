@@ -91,8 +91,8 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
       const item = p.flights[Math.floor(Math.random()*p.flights.length)];
       if (item) {
         let icao = item.icao24
-        const a = await getFlightsByAircraft(icao)
-        console.log(a)
+        const flight = await getFlightsByAircraft(icao)
+        if (flight) console.log(flight[0])
       } 
     }, 1000);
     return () => clearInterval(interval);

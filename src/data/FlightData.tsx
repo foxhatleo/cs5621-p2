@@ -17,21 +17,21 @@ export type FlightsByAircraft = {
 }
 
 async function getFlightsByAircraft(ICAO: string, rewind: number = 86400): Promise<FlightsByAircraft[] | null> {
-  const flights = await makeReq("/flights/aircraft", {'icao24': ICAO, 'begin': Date.now() - rewind, 'end': Date.now()});
+  const flights = await makeReq("/flights/aircraft", {'icao24': ICAO, 'begin': Math.round(Date.now()/1000) - rewind, 'end': Math.round(Date.now()/1000)});
   if (!flights) return null;
-  return (flights.states as any[]).map<FlightsByAircraft>((item: any) => ({
-    icao24: item[0],
-    firstSeen: item[1],
-    estDepartureAirport: item[2],
-    lastSeen: item[3],
-    estArrivalAirport: item[4],
-    callsign: item[5],
-    estDepartureAirportHorizDistance: item[6],
-    estDepartureAirportVertDistance: item[7],
-    estArrivalAirportHorizDistance: item[8],
-    estArrivalAirportVertDistance: item[9],
-    departureAirportCandidatesCount: item[10],
-    arrivalAirportCandidatesCount: item[11]
+  return (flights as any[]).map<FlightsByAircraft>((item: any) => ({
+    icao24: item['icao24'],
+    firstSeen: item['firstSeen'],
+    estDepartureAirport: item['estDepartureAirport'],
+    lastSeen: item['lastSeen'],
+    estArrivalAirport: item['estArrivalAirport'],
+    callsign: item['callsign'],
+    estDepartureAirportHorizDistance: item['estDepartureAirportHorizDistance'],
+    estDepartureAirportVertDistance: item['estDepartureAirportVertDistance'],
+    estArrivalAirportHorizDistance: item['estArrivalAirportHorizDistance'],
+    estArrivalAirportVertDistance: item['estArrivalAirportVertDistance'],
+    departureAirportCandidatesCount: item['departureAirportCandidatesCount'],
+    arrivalAirportCandidatesCount: item['11']
   }));
 }
 
