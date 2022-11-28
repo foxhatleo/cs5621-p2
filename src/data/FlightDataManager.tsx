@@ -4,7 +4,7 @@ const USERS: {username: string; password: string}[] = [
   {username: "wl353", password: "aby!jrw@xjm3hut2RCY"},
 ];
 
-async function makeReq<T = any>(uri: string, params: {[name: string]: any} = {}, user: number = 0): Promise<T | null> {
+export async function makeReq<T = any>(uri: string, params: {[name: string]: any} = {}, user: number = 0): Promise<T | null> {
   if (uri.startsWith("/")) uri = uri.substring(1);
   const headers = user === 0 ? undefined : new Headers({
     "Authorization": "Basic " + btoa(`${USERS[user - 1].username}:${USERS[user - 1].password}`),
