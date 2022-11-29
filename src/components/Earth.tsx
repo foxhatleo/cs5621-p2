@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import Globe, {GlobeMethods} from "react-globe.gl";
 import {StateVector} from "../data/FlightDataManager";
+import getFlightsByAircraft, {FlightsByAircraft} from "../data/FlightData";
 import * as THREE from "three";
 
 const viewportSize = () => {
@@ -60,6 +61,42 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     setGlobeRadius(myGlobe.current?.getGlobeRadius() || 0);
     myGlobe.current?.pointOfView({ altitude: 3.5 });
   }, []);
+
+
+  // IDLE ANIMATION
+  const [seconds, setSeconds] = useState(0);
+  const [isIdle, setIsIdle] = useState(true);
+
+  function reset() {
+    setSeconds(0);
+    setIsIdle(false);
+  }
+
+  useEffect(() => {
+    const interval = setInterval(() => { 
+      setSeconds(seconds => seconds + 1)
+      if (isIdle) {
+        document.onclick = reset
+      } else if (!isIdle && seconds >= 5) {
+        setIsIdle(true);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  });
+
+  useEffect(() => {
+    const interval = setInterval(async () => { 
+      if(!isIdle) return;
+      const item = p.flights[Math.floor(Math.random()*p.flights.length)];
+      if (item) {
+        let icao = item.icao24
+        const flight = await getFlightsByAircraft(icao)
+        if (flight) console.log(flight[0])
+      } 
+    }, 1000);
+    return () => clearInterval(interval);
+  }) 
 
   return (
     <>
