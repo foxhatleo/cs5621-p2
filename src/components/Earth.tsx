@@ -1,7 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import Globe, {GlobeMethods} from "react-globe.gl";
 import {StateVector} from "../data/FlightDataManager";
-import getFlightsByAircraft, {FlightsByAircraft} from "../data/FlightData";
+import getFlightsByAircraft from "../data/FlightData";
 import * as THREE from "three";
 
 const viewportSize = () => {
@@ -44,19 +44,27 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     };
   }, []);
 
-  const objectsData = p.flights.map((state) => ({
-    lat: state.latitude,
-    lng: state.longitude,
+  const objectsData: (StateVector & {lat: number; lng: number; alt: number})[] = p.flights.map((state) => ({
+    ...state,
+    lat: state.latitude!,
+    lng: state.longitude!,
     alt: .05
   })).filter((s) => s.lat && s.lng);
 
-  const satObject = useMemo(() => {
+  const satObject = (data_untyped: Object): any => {
+    const data = data_untyped as StateVector;
     if (!globeRadius) return undefined;
-
-    const satGeometry = new THREE.OctahedronGeometry(80 * globeRadius / 6371 / 2, 0);
-    const satMaterial = new THREE.MeshLambertMaterial({ color: 'palegreen', transparent: true, opacity: 0.7 });
-    return new THREE.Mesh(satGeometry, satMaterial);
-  }, [globeRadius]);
+    const yellow_map = new THREE.TextureLoader().load( 'https://i.imgur.com/bb4rqmb.png' );
+    const green_map = new THREE.TextureLoader().load( 'https://i.imgur.com/WRLjUEG.png' );
+    const material = new THREE.SpriteMaterial(
+      {
+        map : yellow_map,
+        rotation: data.true_track ? -1 * (data.true_track * (Math.PI/180)) : 0
+      });
+    const sprite =  new THREE.Sprite(material);
+    sprite.scale.set(2, 2, 2)
+    return sprite;
+  };
 
   useEffect(() => {
     setGlobeRadius(myGlobe.current?.getGlobeRadius() || 0);

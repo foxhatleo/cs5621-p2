@@ -65,7 +65,7 @@ async function getAllFlights(): Promise<StateVector[] | null> {
     spi: item[15],
     position_source: item[16],
     category: item[17],
-  })).filter(s => !s.on_ground && Math.random() < 0.4);
+  })).filter(s => !s.on_ground && Math.random() < 0.1);
 }
 
 export type FlightDataManagerProps = {
