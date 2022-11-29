@@ -1,5 +1,5 @@
 import React, {useEffect} from "react";
-import {makeReq} from "./FlightDataManager";
+import {makeReq} from "./AllFlights";
 
 export type FlightsByAircraft = {
   icao24: string;
@@ -36,4 +36,4 @@ async function getFlightsByAircraft(ICAO: string, rewind: number = 86400): Promi
 }
 
 
-export default getFlightsByAircraft; 
+export default getFlightsByAircraft;

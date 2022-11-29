@@ -65,14 +65,14 @@ async function getAllFlights(): Promise<StateVector[] | null> {
     spi: item[15],
     position_source: item[16],
     category: item[17],
-  })).filter(s => !s.on_ground && Math.random() < 0.1);
+  })).filter(s => !s.on_ground && s.longitude && s.latitude && Math.random() < 0.1);
 }
 
-export type FlightDataManagerProps = {
+export type AllFlightsProps = {
   setAllFlights: (flights: StateVector[]) => void;
 };
 
-const FlightDataManager: React.ComponentType<FlightDataManagerProps> = (p) => {
+const AllFlights: React.ComponentType<AllFlightsProps> = (p) => {
   useEffect(() => {
     const allFlights = getAllFlights();
     allFlights.then((res) => {
@@ -89,4 +89,4 @@ const FlightDataManager: React.ComponentType<FlightDataManagerProps> = (p) => {
   return (<></>);
 };
 
-export default FlightDataManager;
+export default AllFlights;
