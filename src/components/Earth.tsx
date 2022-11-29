@@ -99,7 +99,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     return () => clearInterval(interval);
   });
 
-  const onSelect = (obj: any) => {
+  const onSelect = (obj: any, event: MouseEvent) => {
     const ind = objectsData.indexOf(obj);
     if (ind === -1) {
       console.error("On select received an unknown object.");
@@ -108,10 +108,16 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     setSelected(ind);
     console.log(`Select ind ${ind}.`);
     console.dir(obj);
+    event.stopImmediatePropagation();
   };
 
+  const clickOutside = () => {
+    setSelected(-1);
+    console.log(`Clear selection.`);
+  }
+
   return (
-    <>
+    <div onClick={clickOutside}>
       <Globe width={width}
              height={height}
              globeImageUrl="//cdn.jsdelivr.net/npm/three-globe/example/img/earth-night.jpg"
@@ -123,7 +129,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
              objectsData={objectsData}
              objectThreeObject={satObject}
              onObjectClick={onSelect} />
-    </>
+    </div>
   )
 };
 
