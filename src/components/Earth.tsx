@@ -23,6 +23,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
   const [width, setWidth] = useState<number>(0);
   const [height, setHeight] = useState<number>(0);
   const [globeRadius, setGlobeRadius] = useState<number>(0);
+  const [selected, setSelected] = useState<number>(-1);
 
   useEffect(() => {
     if (!myGlobe.current) return;
@@ -73,7 +74,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
   }
 
   useEffect(() => {
-    const interval = setInterval(() => { 
+    const interval = setInterval(() => {
       setSeconds(seconds => seconds + 1)
       if (isIdle) {
         document.onclick = reset
@@ -86,17 +87,28 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
   });
 
   useEffect(() => {
-    const interval = setInterval(async () => { 
+    const interval = setInterval(async () => {
       if(!isIdle) return;
       const item = p.flights[Math.floor(Math.random()*p.flights.length)];
       if (item) {
         let icao = item.icao24
         const flight = await getFlightsByAircraft(icao)
         if (flight) console.log(flight[0])
-      } 
+      }
     }, 1000);
     return () => clearInterval(interval);
-  }) 
+  });
+
+  const onSelect = (obj: any) => {
+    const ind = objectsData.indexOf(obj);
+    if (ind === -1) {
+      console.error("On select received an unknown object.");
+      debugger;
+    }
+    setSelected(ind);
+    console.log(`Select ind ${ind}.`);
+    console.dir(obj);
+  };
 
   return (
     <>
@@ -109,7 +121,8 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
              objectLat="lat"
              objectLng="lng"
              objectsData={objectsData}
-             objectThreeObject={satObject} />
+             objectThreeObject={satObject}
+             onObjectClick={onSelect} />
     </>
   )
 };
