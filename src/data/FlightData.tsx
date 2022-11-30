@@ -31,7 +31,7 @@ async function getFlightsByAircraft(ICAO: string, rewind: number = 86400): Promi
     estArrivalAirportHorizDistance: item['estArrivalAirportHorizDistance'],
     estArrivalAirportVertDistance: item['estArrivalAirportVertDistance'],
     departureAirportCandidatesCount: item['departureAirportCandidatesCount'],
-    arrivalAirportCandidatesCount: item['11']
+    arrivalAirportCandidatesCount: item['arrivalAirportCandidatesCount']
   }));
 }
 

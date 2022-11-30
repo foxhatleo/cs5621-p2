@@ -1,8 +1,22 @@
 import React, {useEffect, useState} from "react";
 import {StateVector} from "../data/AllFlights";
+import {FlightsByAircraft} from "../data/FlightData";
+import AirportsData from "../data/AirportsData";
 
 export type UIProps = {
   data: StateVector | null;
+  flight: FlightsByAircraft | null | false;
+};
+
+const airport = (k: string): string => {
+  const res = AirportsData[k];
+  if (res) {
+    const n = res.name;
+    if (!n) return k;
+    if (n.endsWith(" International Airport")) return n.substring(0, n.length - 22);
+    if (n.endsWith(" Airport")) return n.substring(0, n.length - 8);
+  }
+  return k;
 };
 
 const UI: React.ComponentType<UIProps> = (p) => {
@@ -22,6 +36,10 @@ const UI: React.ComponentType<UIProps> = (p) => {
     "Velocity": "velocity",
     "Heading": "true_track",
   };
+  const labels2: { [label: string]: keyof FlightsByAircraft } = {
+    "Departure Airport": "estDepartureAirport",
+    // "Arrival Airport": "estArrivalAirport",
+  };
   return (
     <div className={"ui" + (show ? " show" : "")}>
       <table>
@@ -32,6 +50,15 @@ const UI: React.ComponentType<UIProps> = (p) => {
             <td className={"ui-td2"}>{data[key] || "Unknown"}</td>
           </tr>
         )) : null}
+        {Object.entries(labels2).map(([label, key], ind) => (
+          <tr key={ind}>
+            <td className={"ui-td1"}>{label}</td>
+            <td>{"  "}</td>
+            <td className={"ui-td2"}>{p.flight === null ? "Loading..." :
+              (p.flight === false ? "Unknown" : (airport(p.flight[key]) || "Unknown"))
+            }</td>
+          </tr>
+        ))}
       </table>
       <style>{`
         .ui {
@@ -53,6 +80,9 @@ const UI: React.ComponentType<UIProps> = (p) => {
         }
         .ui-td1 {
           font-weight: 600;
+        }
+        .ui-td2 {
+          width: 150px;
         }
       `}</style>
     </div>
