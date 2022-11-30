@@ -32,7 +32,7 @@ export type StateVector = {
  */
 function stateToStateVector(item: any): StateVector {
   return {
-    icao24: item[0],
+    icao24: item[0].trim(),
     callsign: item[1],
     origin_country: item[2],
     time_position: item[3],
@@ -55,12 +55,12 @@ function stateToStateVector(item: any): StateVector {
 }
 
 /**
- * Get the list of all flights. If process fails, an empty array is returned.
+ * Get the list of all StateVectors. If process fails, an empty array is returned.
  *
  * @param threshold The amount of flights to keep. For example, .2 means 20% of the flights will be random selected and
  * returned. Must be within [0,1].
  */
-async function getAllFlights(threshold = .2): Promise<StateVector[]> {
+async function getAllStateVectors(threshold = .2): Promise<StateVector[]> {
   const allStates = await makeReq("/states/all", {});
 
   if (!allStates) {
@@ -88,7 +88,7 @@ async function getAllFlights(threshold = .2): Promise<StateVector[]> {
  *
  * @param orig Original list of state vectors.
  */
-export async function updateAllFlights(orig: StateVector[]): Promise<StateVector[]> {
+export async function updateAllStateVectors(orig: StateVector[]): Promise<StateVector[]> {
   if (orig.length === 0) return orig;
 
   const allStates = await makeReq("/states/all", {});
@@ -108,17 +108,9 @@ export async function updateAllFlights(orig: StateVector[]): Promise<StateVector
     const newSV = lookup[origSV.icao24];
     if (newSV) newSV.artificial_altitude = origSV.artificial_altitude;
     newLst.push(newSV || origSV);
-    if (newSV &&
-      (
-        newSV.latitude != origSV.latitude ||
-        newSV.longitude != origSV.longitude ||
-        newSV.true_track != origSV.true_track
-      )) {
-      console.log(`Flight ${origSV.icao24} has changed position or heading during live update.`);
-    }
   }
 
   return newLst;
 }
 
-export default getAllFlights;
+export default getAllStateVectors;

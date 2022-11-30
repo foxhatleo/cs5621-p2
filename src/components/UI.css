@@ -1,0 +1,26 @@
+.ui {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 10;
+    padding: 10px;
+    background: rgb(57, 65, 77);
+    border: 3px solid rgb(33, 35, 38);
+    color: white;
+    font-family: Helvetica, Arial, "Segoe UI", sans-serif;
+    transition: .5s ease-in-out opacity;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.ui.show {
+    opacity: 1;
+}
+
+.ui-td1 {
+    font-weight: 600;
+}
+
+.ui-td2 {
+    width: 150px;
+}

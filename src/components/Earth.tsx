@@ -3,8 +3,8 @@ import Globe, {GlobeMethods} from "react-globe.gl";
 import {StateVector} from "../data/AllFlights";
 import * as THREE from "three";
 import {Sprite} from "three";
-import {FlightsByAircraft} from "../data/FlightData";
 import AirportsData from "../data/AirportsData";
+import {DetailedStateVector} from "../data/DetailedFlightData";
 
 const viewportSize = () => {
   const w = window.innerWidth
@@ -17,8 +17,8 @@ const viewportSize = () => {
 };
 
 export type EarthProps = {
-  flights: StateVector[];
-  selectedFlightData: FlightsByAircraft | null;
+  stateVectors: StateVector[];
+  selected: DetailedStateVector | null;
   setSelected: (v: number) => void;
 };
 
@@ -30,11 +30,10 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
   const [width, setWidth] = useState<number>(0);
   const [height, setHeight] = useState<number>(0);
   const [globeRadius, setGlobeRadius] = useState<number>(0);
-  const [selected, setSelected] = useState<number>(-1);
 
   useEffect(() => {
     if (!myGlobe.current) return;
-    myGlobe.current.controls().minDistance = 200;
+    myGlobe.current.controls().minDistance = 150;
     myGlobe.current.controls().maxDistance = 330;
     myGlobe.current.controls().zoomSpeed = 5;
     setWidth(viewportSize()[0]);
@@ -51,48 +50,40 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     };
   }, []);
 
-  const objectsData: (StateVector & { lat: number; lng: number; alt: number })[] = useMemo(() => p.flights.map((state, i) => ({
-    ...state,
-    lat: state.latitude!,
-    lng: state.longitude!,
-    alt: state.artificial_altitude
-  })), [p.flights]);
-
   const spriteRefs = useRef<{ [icao24: string]: Sprite }>({});
   const selectedSpritRef = useRef<Sprite | null>(null);
 
-  const satObject = useCallback((data_untyped: Object): any => {
-    const data = data_untyped as typeof objectsData[0];
+  const satObject = useCallback((data_untyped: unknown): any => {
+    const data = data_untyped as StateVector;
     if (!globeRadius) return undefined;
     const material = new THREE.SpriteMaterial(
       {
-        map: selected === objectsData.indexOf(data) ? green_map : yellow_map,
+        map: data.icao24 == p.selected?.icao24 ? green_map : yellow_map,
         rotation: data.true_track ? -1 * (data.true_track * (Math.PI / 180)) : 0
       });
     const sprite = new THREE.Sprite(material);
     sprite.scale.set(2, 2, 2);
     spriteRefs.current[data.icao24] = sprite;
     return sprite;
-  }, [objectsData]);
+  }, [p.stateVectors]);
 
   useEffect(() => {
     setGlobeRadius(myGlobe.current?.getGlobeRadius() || 0);
     myGlobe.current?.pointOfView({altitude: 3.5});
   }, []);
 
-  const onSelect = (obj: any, event: MouseEvent) => {
-    const ind = objectsData.indexOf(obj);
+  const onSelect = useCallback((obj_untyped: unknown) => {
+    const obj = obj_untyped as StateVector;
+    const ind = p.stateVectors.indexOf(obj);
     if (ind === -1) {
       console.error("On select received an unknown object.");
-      debugger;
+      return;
     }
-    setSelected(ind);
     console.log(`Select ind ${ind}.`);
-    console.dir(obj);
-    const sp = spriteRefs.current[(obj as StateVector).icao24];
+    const sp = spriteRefs.current[obj.icao24];
     if (!sp) {
       console.error("Could not find sprite when selecting.");
-      debugger;
+      return;
     }
     sp.material.map = green_map;
     if (selectedSpritRef.current) {
@@ -100,7 +91,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     }
     selectedSpritRef.current = sp;
     p.setSelected(ind);
-  };
+  }, [p.stateVectors]);
 
   function arc(d: any) {
     const s = myGlobe?.current!.getCoords(d.source_lat, d.source_lng, d.source_alt);
@@ -136,8 +127,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     const opposite_source = globe.clone().add(globe.clone().add(source.clone().multiplyScalar(-10)));
     const small_r = source.clone().add(
       (
-        opposite_source.clone().sub(source).multiplyScalar
-        (
+        opposite_source.clone().sub(source).multiplyScalar(
           normal.dot(midpoint.clone().sub(source)) /
           normal.dot(opposite_source.clone().sub(source))
         )
@@ -166,28 +156,30 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
 
   const [arcData, setArcData] = useState<null | THREE.Vector3[][]>(null);
   useEffect(() => {
-    if (!p.selectedFlightData || (selected === -1)) setArcData([]);
+    if (!p.selected) setArcData([]);
     else {
-      const departureAirport = p.selectedFlightData.estDepartureAirport;
+      const departureAirport = p.selected.estDepartureAirport;
       if (!departureAirport) {
         setArcData([]);
       } else {
         const adata = AirportsData[departureAirport];
-        console.log(adata.state);
-        console.log(adata.icao);
+        if (!adata) {
+          setArcData([]);
+          return;
+        }
         const data = {
           source_lat: adata.lat,
           source_lng: adata.lon,
           source_alt: 0,
-          target_lat: p.flights[selected].latitude,
-          target_lng: p.flights[selected].longitude,
+          target_lat: p.selected.latitude,
+          target_lng: p.selected.longitude,
           target_alt: 0.06, // NEEDS TO BE CHANGED
           points: 200,
         };
         setArcData(arc(data));
       }
     }
-  }, [selected]);
+  }, [p.selected]);
 
   const arcDrawer = useCallback((v: any) => {
     const geometry = new THREE.BufferGeometry().setFromPoints(v);
@@ -203,7 +195,6 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
   const upHandler = () => {
     if (mouseEventStage.current === 1) {
       mouseEventStage.current = 0;
-      setSelected(-1);
       if (selectedSpritRef.current) {
         selectedSpritRef.current!.material.map = yellow_map;
       }
@@ -223,10 +214,10 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
         globeImageUrl="//cdn.jsdelivr.net/npm/three-globe/example/img/earth-night.jpg"
         backgroundImageUrl="//cdn.jsdelivr.net/npm/three-globe/example/img/night-sky.png"
         ref={myGlobe}
-        objectAltitude="alt"
-        objectLat="lat"
-        objectLng="lng"
-        objectsData={objectsData}
+        objectAltitude="artificial_altitude"
+        objectLat="latitude"
+        objectLng="longitude"
+        objectsData={p.stateVectors}
         objectThreeObject={satObject}
         onObjectClick={onSelect}
         customLayerData={arcData ? arcData : []}

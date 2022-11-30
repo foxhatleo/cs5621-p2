@@ -1,42 +1,45 @@
 import makeReq from "./Request";
+import {StateVector} from "./AllFlights";
 
-export type FlightsByAircraft = {
+type AdditionalInfo = {
   icao24: string;
-  callsign: string | null;
   firstSeen: number;
-  estDepartureAirport: string | null;
+  estDepartureAirport: string;
   lastSeen: number;
-  estArrivalAirport: string | null;
-  estDepartureAirportHorizDistance: number;
-  estDepartureAirportVertDistance: number;
-  estArrivalAirportHorizDistance: number;
-  estArrivalAirportVertDistance: number;
-  departureAirportCandidatesCount: number;
-  arrivalAirportCandidatesCount: number;
+  estArrivalAirport: string;
 }
 
-async function getFlightsByAircraft(ICAO: string, rewind = 86400): Promise<FlightsByAircraft[] | null> {
+export type DetailedStateVector = AdditionalInfo & StateVector;
+
+export function getPlaceholderDetailedStateVector(sv: StateVector, placeholder: string): DetailedStateVector {
+  return {
+    ...sv,
+    firstSeen: 0,
+    estDepartureAirport: placeholder,
+    lastSeen: 0,
+    estArrivalAirport: placeholder,
+  };
+}
+
+/**
+ * Given a StateVector, grab additional information such as the departing and landing airport.
+ *
+ * @param sv The StateVector.
+ */
+async function getDetailedStateVector(sv: StateVector): Promise<DetailedStateVector | null> {
   const flights = await makeReq("/flights/aircraft", {
-    "icao24": ICAO,
-    "begin": Math.round(Date.now() / 1000) - rewind,
+    "icao24": sv.icao24,
+    "begin": Math.round(Date.now() / 1000) - 86400,
     "end": Math.round(Date.now() / 1000)
   });
   if (!flights) return null;
-  return (flights as any[]).map<FlightsByAircraft>((item: any) => ({
-    icao24: item["icao24"],
+  return (flights as any[]).map<DetailedStateVector>((item: any) => ({
+    ...sv,
     firstSeen: item["firstSeen"],
     estDepartureAirport: item["estDepartureAirport"],
     lastSeen: item["lastSeen"],
     estArrivalAirport: item["estArrivalAirport"],
-    callsign: item["callsign"],
-    estDepartureAirportHorizDistance: item["estDepartureAirportHorizDistance"],
-    estDepartureAirportVertDistance: item["estDepartureAirportVertDistance"],
-    estArrivalAirportHorizDistance: item["estArrivalAirportHorizDistance"],
-    estArrivalAirportVertDistance: item["estArrivalAirportVertDistance"],
-    departureAirportCandidatesCount: item["departureAirportCandidatesCount"],
-    arrivalAirportCandidatesCount: item["arrivalAirportCandidatesCount"]
-  }));
+  })).sort((a, b) => b.lastSeen - a.lastSeen)[0];
 }
 
-
-export default getFlightsByAircraft;
+export default getDetailedStateVector;

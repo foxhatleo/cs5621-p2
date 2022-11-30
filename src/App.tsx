@@ -1,22 +1,25 @@
 import React, {useEffect, useState} from "react";
 import Earth from "./components/Earth";
-import getAllFlights, {StateVector, updateAllFlights} from "./data/AllFlights";
+import getAllStateVectors, {StateVector, updateAllStateVectors} from "./data/AllFlights";
 import UI from "./components/UI";
-import getFlightsByAircraft, {FlightsByAircraft} from "./data/FlightData";
 import "./App.css";
+import getDetailedStateVector, {
+  DetailedStateVector,
+  getPlaceholderDetailedStateVector
+} from "./data/DetailedFlightData";
 
 /**
  * App is the entry point of the application.
  */
 function App() {
-  const [flights, setFlights] = useState<StateVector[]>([]);
-  const [selectedStateVector, setSelectedStateVector] = useState<StateVector | null>(null);
-  const [flightData, setFlightData] = useState<FlightsByAircraft | null | false>(null);
+  const [stateVectors, setStateVectors] = useState<StateVector[]>([]);
+  const [detailedStateVector, setDetailedStateVector] = useState<DetailedStateVector | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [requestLiveUpdate, setRequestLiveUpdate] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
-      setFlights(await getAllFlights() || []);
+      setStateVectors(await getAllStateVectors() || []);
     })();
     const liveUpdateInterval = setInterval(() => {
       setRequestLiveUpdate(true);
@@ -29,33 +32,36 @@ function App() {
   useEffect(() => {
     (async () => {
       if (requestLiveUpdate) {
-        console.log("Live update request received.");
-        const res = await updateAllFlights(flights);
-        setFlights(res);
+        const res = await updateAllStateVectors(stateVectors);
+        setStateVectors(res);
         setRequestLiveUpdate(false);
-        console.log("Live update request fulfilled.");
       }
     })();
-  }, [flights, requestLiveUpdate]);
+  }, [stateVectors, requestLiveUpdate]);
 
   const setSelected = async (v: number) => {
-    setSelectedStateVector(flights[v]);
-    if (v === -1) {
-      return;
-    }
-    setFlightData(null);
-    const res = await getFlightsByAircraft(flights[v].icao24);
-    if (!res) {
-      setFlightData(false);
-    } else {
-      setFlightData(res.sort((a, b) => b.lastSeen - a.lastSeen)[0]);
-    }
+    setSelectedIndex(v);
   };
+
+  useEffect(() => {
+    (async () => {
+      if (selectedIndex >= 0) {
+        const stateVector = stateVectors[selectedIndex];
+        if (detailedStateVector && detailedStateVector.icao24 === stateVector.icao24) {
+          setDetailedStateVector({...detailedStateVector, ...stateVector});
+        } else {
+          setDetailedStateVector(getPlaceholderDetailedStateVector(stateVector, "Loading"));
+          const newDSV = await getDetailedStateVector(stateVector);
+          setDetailedStateVector(newDSV);
+        }
+      }
+    })();
+  }, [stateVectors, selectedIndex]);
 
   return (
     <div className="App">
-      <Earth selectedFlightData={flightData === false ? null : flightData} flights={flights} setSelected={setSelected}/>
-      <UI data={selectedStateVector} flight={flightData}/>
+      <Earth selected={detailedStateVector} stateVectors={stateVectors} setSelected={setSelected} />
+      <UI data={detailedStateVector} showing={selectedIndex >= 0} />
     </div>
   );
 }

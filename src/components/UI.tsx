@@ -1,15 +1,15 @@
-import React, {useEffect, useState} from "react";
-import {StateVector} from "../data/AllFlights";
-import {FlightsByAircraft} from "../data/FlightData";
+import React from "react";
 import AirportsData from "../data/AirportsData";
+import {DetailedStateVector} from "../data/DetailedFlightData";
+import "./UI.css";
 
 export type UIProps = {
-  data: StateVector | null;
-  flight: FlightsByAircraft | null | false;
+  data: DetailedStateVector | null;
+  showing: boolean;
 };
 
-const airport = (k: string | null): string => {
-  if (!k) return "Unknown";
+const getFriendlyNameOfAirport = (k: string | null): string | null => {
+  if (!k) return null;
   const res = AirportsData[k];
   if (res) {
     const n = res.name;
@@ -21,14 +21,7 @@ const airport = (k: string | null): string => {
 };
 
 const UI: React.ComponentType<UIProps> = (p) => {
-  const [data, setData] = useState<StateVector | null>(null);
-  const show = !!p.data;
-  useEffect(() => {
-    if (p.data) {
-      setData(p.data);
-    }
-  }, [p.data]);
-  const labels: { [label: string]: keyof StateVector } = {
+  const labels: { [label: string]: keyof DetailedStateVector } = {
     "ICAO24": "icao24",
     "Callsign": "callsign",
     "Origin Country/Region": "origin_country",
@@ -36,56 +29,26 @@ const UI: React.ComponentType<UIProps> = (p) => {
     "Latitude": "latitude",
     "Velocity": "velocity",
     "Heading": "true_track",
-  };
-  const labels2: { [label: string]: keyof FlightsByAircraft } = {
     "Departure Airport": "estDepartureAirport",
-    // "Arrival Airport": "estArrivalAirport",
   };
+
   return (
-    <div className={"ui" + (show ? " show" : "")}>
+    <div className={"ui" + (p.showing ? " show" : "")}>
       <table>
-        {data ? Object.entries(labels).map(([label, key], ind) => (
-          <tr key={ind}>
-            <td className={"ui-td1"}>{label}</td>
-            <td>{"  "}</td>
-            <td className={"ui-td2"}>{data[key] || "Unknown"}</td>
-          </tr>
-        )) : null}
-        {Object.entries(labels2).map(([label, key], ind) => (
-          <tr key={ind}>
-            <td className={"ui-td1"}>{label}</td>
-            <td>{"  "}</td>
-            <td className={"ui-td2"}>{p.flight === null ? "Loading..." :
-              (p.flight === false ? "Unknown" : (airport((p.flight as FlightsByAircraft)[key] as string | null) || "Unknown"))
-            }</td>
-          </tr>
-        ))}
+        <tbody>
+          {p.data ? Object.entries(labels).map(([label, key], ind) => (
+            <tr key={ind}>
+              <td className={"ui-td1"}>{label}</td>
+              <td>{"  "}</td>
+              <td className={"ui-td2"}>
+                {(label.includes("Airport") ?
+                  getFriendlyNameOfAirport(p.data![key] as string | null) :
+                  p.data![key]) || "Unknown"}
+              </td>
+            </tr>
+          )) : null}
+        </tbody>
       </table>
-      <style>{`
-        .ui {
-          position: fixed;
-          bottom: 25px;
-          right: 25px;
-          z-index: 10;
-          padding: 10px;
-          background: rgb(57, 65, 77);
-          border: 3px solid rgb(33, 35, 38);
-          color: white;
-          font-family: Helvetica, Arial, "Segoe UI", sans-serif;
-          transition: .5s ease-in-out opacity;
-          opacity: 0;
-          pointer-events: none;
-        }
-        .ui.show {
-          opacity: 1;
-        }
-        .ui-td1 {
-          font-weight: 600;
-        }
-        .ui-td2 {
-          width: 150px;
-        }
-      `}</style>
     </div>
   );
 };

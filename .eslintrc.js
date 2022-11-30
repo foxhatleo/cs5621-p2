@@ -4,6 +4,9 @@ module.exports = {
     "browser": true,
     "es2021": true
   },
+  "ignorePatterns": [
+    "src/data/AirportsData.ts"
+  ],
   "extends": [
     "eslint:recommended",
     "plugin:react/recommended",
@@ -37,6 +40,8 @@ module.exports = {
       "error",
       "always"
     ],
+    "no-debugger": "warn",
     "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
   }
 };
