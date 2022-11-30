@@ -8,7 +8,7 @@ export type UIProps = {
   flight: FlightsByAircraft | null | false;
 };
 
-const airport = (k: string | null): string=> {
+const airport = (k: string | null): string => {
   if (!k) return "Unknown";
   const res = AirportsData[k];
   if (res) {

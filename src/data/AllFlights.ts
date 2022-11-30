@@ -97,7 +97,7 @@ export async function updateAllFlights(orig: StateVector[]): Promise<StateVector
     return orig;
   }
 
-  const lookup: {[icao24: string]: StateVector} = {};
+  const lookup: { [icao24: string]: StateVector } = {};
   for (const state of (allStates.states as any[])) {
     const sv = stateToStateVector(state);
     lookup[sv.icao24] = sv;
