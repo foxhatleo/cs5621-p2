@@ -4,6 +4,7 @@ import {StateVector} from "../data/AllFlights";
 import * as THREE from "three";
 import {Sprite} from "three";
 import {FlightsByAircraft} from "../data/FlightData";
+import AirportsData from "../data/AirportsData";
 
 const viewportSize = () => {
   const w = window.innerWidth
@@ -50,11 +51,11 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     };
   }, []);
 
-  const objectsData: (StateVector & {lat: number; lng: number; alt: number})[] = useMemo(() => p.flights.map((state) => ({
+  const objectsData: (StateVector & {lat: number; lng: number; alt: number})[] = useMemo(() => p.flights.map((state, i) => ({
     ...state,
     lat: state.latitude!,
     lng: state.longitude!,
-    alt: .05 + Math.random() * .025
+    alt: .05 + i/p.flights.length * .025
   })), [p.flights]);
 
   const spriteRefs = useRef<{[icao24: string]: Sprite}>({});
@@ -101,52 +102,56 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     p.setSelected(ind);
   };
 
-  const randomData = {
-    source_lat: 40.712778,
-    source_lng: -74.006111,
-    source_alt: 0,
-    target_lat: 40.712778,
-    target_lng: -74.006111-10,
-    target_alt: 0.05,
-    points : 50,
-  };
-
   function arc(d:any) {
     const s = myGlobe?.current!.getCoords(d.source_lat, d.source_lng, d.source_alt)
     const source = new THREE.Vector3(s.x, s.y, s.z)
     const t = myGlobe?.current!.getCoords(d.target_lat, d.target_lng, d.target_alt)
     const target = new THREE.Vector3(t.x, t.y, t.z)
     const globe = new THREE.Vector3(0, 0, 0)
-    const v = target.clone().sub(source)
-    console.log("source")
-    console.log(source)
-    console.log("target")
-    console.log(target)
-    const normal = v.clone()
-    console.log("normal")
-    console.log(normal)
-    const midpoint = v.clone().multiplyScalar(0.5).add(source)
-    const opposite_source = globe.clone().add(globe.clone().add(source.clone().multiplyScalar(-10)))
-    const old_r = source.clone().add(
-      (
-        opposite_source.clone().sub(source).multiplyScalar
-        (
-          normal.dot(midpoint.clone().sub(source)) /
-          normal.dot(opposite_source.clone().sub(source))
-        )
-      )
-    )
-    console.log(old_r)
-    const r = old_r // midpoint.clone().add(midpoint.clone().sub(old_r))
-    const ra = r.distanceTo(source)
-    console.log(r)
-    console.log(ra)
+    
+    const center = globe
+    const radius = target.distanceTo(globe)
 
     var p = new Array(d.points).fill(null).map((_, i) => i + 1);
-    const points = p.map((x, _) => {
-      const temp = v.clone().multiplyScalar(x / d.points).add(source)
-      return r.clone().add(temp.sub(r).normalize().multiplyScalar(ra))
+    var points = p.map((x, _) => {
+      const temp = target.clone().sub(source).multiplyScalar(x / d.points).add(source)
+      return center.clone().add(temp.clone().sub(center).normalize().multiplyScalar(radius))
     })
+    
+    if (points[points.length-1].angleTo(source) < Math.PI/30) {
+      points = [points[points.length-1]]
+    } else {
+      for(let i = 0; i < points.length; i++) {
+        if (points[i].angleTo(source) >= Math.PI/30) {
+          points = points.slice(i)
+          break;
+    }}}
+     
+    const intermediate = points[0]
+    const vec = intermediate.clone().sub(source)
+    const normal = vec.clone()
+    const midpoint = vec.clone().multiplyScalar(0.5).add(source)
+    const opposite_source = globe.clone().add(globe.clone().add(source.clone().multiplyScalar(-10)))
+    const small_r = source.clone().add(
+    (
+         opposite_source.clone().sub(source).multiplyScalar
+         (
+           normal.dot(midpoint.clone().sub(source)) /
+           normal.dot(opposite_source.clone().sub(source))
+         )
+       )
+    )
+    const r_1 = midpoint.clone().add(midpoint.clone().sub(small_r))
+    const radius_1 = r_1.distanceTo(source)
+
+    var p_1 = new Array(d.points).fill(null).map((_, i) => i + 1);
+    const points_1 = p_1.map((x, _) => {
+       const temp = vec.clone().multiplyScalar(x / d.points).add(source)
+       return r_1.clone().add(temp.sub(r_1).normalize().multiplyScalar(radius_1))
+     })
+    
+    points = points_1.concat(points)
+
     var points_pairs = points.map((x, i) => {
       if (i + 1 === points.length) {
         return [x, x]
@@ -158,8 +163,27 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
   }
   const [arcData, setArcData] = useState<null | THREE.Vector3[][]>(null);
   useEffect(() => {
-    setArcData(arc(randomData));
-  }, []);
+    if (!!!p.selectedFlightData || (selected === -1)) setArcData([]) 
+    else {
+      const departureAirport = p.selectedFlightData.estDepartureAirport
+      if (!!!departureAirport) {setArcData([])}
+      else {
+        const adata = AirportsData[departureAirport]
+        console.log(adata.state)
+        console.log(adata.icao)
+        const data = {
+          source_lat: adata.lat,
+          source_lng: adata.lon,
+          source_alt: 0,
+          target_lat: p.flights[selected].latitude, 
+          target_lng: p.flights[selected].longitude,
+          target_alt: 0.06, // NEEDS TO BE CHANGED
+          points : 200,
+        };
+        setArcData(arc(data));
+      }
+    }
+  }, [selected]);
 
   const arcDrawer = useCallback((v: any) => {
     const geometry = new THREE.BufferGeometry().setFromPoints(v);
