@@ -8,7 +8,8 @@ export type UIProps = {
   flight: FlightsByAircraft | null | false;
 };
 
-const airport = (k: string): string => {
+const airport = (k: string | null): string=> {
+  if (!k) return "Unknown";
   const res = AirportsData[k];
   if (res) {
     const n = res.name;
@@ -55,7 +56,7 @@ const UI: React.ComponentType<UIProps> = (p) => {
             <td className={"ui-td1"}>{label}</td>
             <td>{"  "}</td>
             <td className={"ui-td2"}>{p.flight === null ? "Loading..." :
-              (p.flight === false ? "Unknown" : (airport(p.flight[key]) || "Unknown"))
+              (p.flight === false ? "Unknown" : (airport((p.flight as FlightsByAircraft)[key] as string | null) || "Unknown"))
             }</td>
           </tr>
         ))}
