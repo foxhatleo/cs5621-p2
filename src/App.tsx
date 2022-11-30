@@ -4,7 +4,6 @@ import Earth from "./components/Earth";
 import AllFlights, {StateVector} from "./data/AllFlights";
 import UI from "./components/UI";
 import getFlightsByAircraft, {FlightsByAircraft} from "./data/FlightData";
-import AirportsData from "./data/AirportsData";
 
 function App() {
   const [flights, setFlights] = useState<StateVector[]>([]);
@@ -17,6 +16,10 @@ function App() {
 
   const setSelected = async (v: number) => {
     setSelectedStateVector(flights[v]);
+    if (v === -1) {
+      setFlightData(null);
+      return;
+    }
     const res = await getFlightsByAircraft(flights[v].icao24);
     if (!res) {
       setFlightData(false);
@@ -27,7 +30,7 @@ function App() {
 
   return (
     <div className="App">
-      <Earth flights={flights} setSelected={setSelected} />
+      <Earth selectedFlightData={flightData === false ? null : flightData} flights={flights} setSelected={setSelected} />
       <AllFlights setAllFlights={dataUpdater} />
       <UI data={selectedStateVector} flight={flightData} />
     </div>

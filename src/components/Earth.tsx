@@ -3,6 +3,7 @@ import Globe, {GlobeMethods} from "react-globe.gl";
 import {StateVector} from "../data/AllFlights";
 import * as THREE from "three";
 import {Sprite} from "three";
+import {FlightsByAircraft} from "../data/FlightData";
 
 const viewportSize = () => {
   const w = window.innerWidth
@@ -16,6 +17,7 @@ const viewportSize = () => {
 
 export type EarthProps = {
   flights: StateVector[];
+  selectedFlightData: FlightsByAircraft | null;
   setSelected: (v: number) => void;
 };
 
@@ -103,7 +105,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     source_lat: 40.712778,
     source_lng: -74.006111,
     source_alt: 0,
-    target_lat: 40.712778, 
+    target_lat: 40.712778,
     target_lng: -74.006111-10,
     target_alt: 0.05,
     points : 50,
@@ -178,9 +180,9 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
              objectsData={objectsData}
              objectThreeObject={satObject}
              onObjectClick={onSelect}
-             customLayerData={arcData ? arcData : []} 
+             customLayerData={arcData ? arcData : []}
              customThreeObject={arcDrawer}
-             customThreeObjectUpdate={(obj, d:any) => 
+             customThreeObjectUpdate={(obj, d:any) =>
              {
               const geometry = new THREE.BufferGeometry().setFromPoints(d);
               Object.assign(obj.position, geometry.attributes.position);
