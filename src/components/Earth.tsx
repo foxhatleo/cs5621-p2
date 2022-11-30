@@ -6,6 +6,9 @@ import {Sprite} from "three";
 import AirportsData from "../data/AirportsData";
 import {DetailedStateVector} from "../data/DetailedFlightData";
 
+/**
+ * Get viewport sizes.
+ */
 const viewportSize = () => {
   const w = window.innerWidth
     || document.documentElement.clientWidth
@@ -16,6 +19,9 @@ const viewportSize = () => {
   return [w, h];
 };
 
+const YELLOW_AIRPLANE = new THREE.TextureLoader().load("https://i.imgur.com/bb4rqmb.png");
+const GREEN_AIRPLANE = new THREE.TextureLoader().load("https://i.imgur.com/WRLjUEG.png");
+
 export type EarthProps = {
   stateVectors: StateVector[];
   selected: DetailedStateVector | null;
@@ -23,15 +29,26 @@ export type EarthProps = {
   selecting: boolean;
 };
 
-const yellow_map = new THREE.TextureLoader().load("https://i.imgur.com/bb4rqmb.png");
-const green_map = new THREE.TextureLoader().load("https://i.imgur.com/WRLjUEG.png");
-
+/**
+ * The earth.
+ */
 const Earth: React.ComponentType<EarthProps> = (p) => {
+  /** Reference of globe. */
   const myGlobe = useRef<GlobeMethods>();
+  /** Size states. */
   const [width, setWidth] = useState<number>(0);
   const [height, setHeight] = useState<number>(0);
   const [globeRadius, setGlobeRadius] = useState<number>(0);
+  /** Reference of the list of sprites for all airplanes. */
+  const spriteRefs = useRef<{ [icao24: string]: Sprite }>({});
+  /** Reference of the sprite of the selected plane. */
+  const selectedSpriteRef = useRef<Sprite | null>(null);
+  /** Data of the arc when a flight is selected. */
+  const [arcData, setArcData] = useState<null | THREE.Vector3[][]>(null);
+  /** A flag to help keep track when user interacts with the globe. */
+  const clearSelectionFlag = useRef<boolean>(false);
 
+  // This hook handles resizing and globe initialization.
   useEffect(() => {
     if (!myGlobe.current) return;
     myGlobe.current.controls().minDistance = 150;
@@ -46,20 +63,21 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     };
     window.addEventListener("resize", resizeHandler);
 
+    setGlobeRadius(myGlobe.current?.getGlobeRadius() || 0);
+    myGlobe.current?.pointOfView({altitude: 3.5});
+
     return () => {
       window.removeEventListener("resize", resizeHandler);
     };
   }, []);
 
-  const spriteRefs = useRef<{ [icao24: string]: Sprite }>({});
-  const selectedSpritRef = useRef<Sprite | null>(null);
-
-  const satObject = useCallback((data_untyped: unknown): any => {
+  // This generates 3D objects for planes.
+  const planeObjGenerator = useCallback((data_untyped: unknown): any => {
     const data = data_untyped as StateVector;
     if (!globeRadius) return undefined;
     const material = new THREE.SpriteMaterial(
       {
-        map: data.icao24 == p.selected?.icao24 ? green_map : yellow_map,
+        map: YELLOW_AIRPLANE,
         rotation: data.true_track ? -1 * (data.true_track * (Math.PI / 180)) : 0
       });
     const sprite = new THREE.Sprite(material);
@@ -68,11 +86,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     return sprite;
   }, [p.stateVectors]);
 
-  useEffect(() => {
-    setGlobeRadius(myGlobe.current?.getGlobeRadius() || 0);
-    myGlobe.current?.pointOfView({altitude: 3.5});
-  }, []);
-
+  /** Handler for selecting a plane. */
   const onSelect = (obj_untyped: unknown) => {
     const obj = obj_untyped as StateVector;
     const ind = p.stateVectors.indexOf(obj);
@@ -86,14 +100,15 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
       console.error("Could not find sprite when selecting.");
       return;
     }
-    sp.material.map = green_map;
-    if (selectedSpritRef.current) {
-      selectedSpritRef.current!.material.map = yellow_map;
+    sp.material.map = GREEN_AIRPLANE;
+    if (selectedSpriteRef.current) {
+      selectedSpriteRef.current!.material.map = YELLOW_AIRPLANE;
     }
-    selectedSpritRef.current = sp;
+    selectedSpriteRef.current = sp;
     p.setSelected(ind);
   };
 
+  /** Generate points for the arc. */
   function arc(d: any) {
     const s = myGlobe?.current!.getCoords(d.source_lat, d.source_lng, d.source_alt);
     const source = new THREE.Vector3(s.x, s.y, s.z);
@@ -155,7 +170,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     return points_pairs;
   }
 
-  const [arcData, setArcData] = useState<null | THREE.Vector3[][]>(null);
+  // This hook handles arc generation when selection changes.
   useEffect(() => {
     if (!p.selected || !p.selecting) setArcData([]);
     else {
@@ -182,30 +197,29 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     }
   }, [p.selected, p.selecting]);
 
+  /** Function that draws the arc using points data. */
   const arcDrawer = useCallback((v: any) => {
     const geometry = new THREE.BufferGeometry().setFromPoints(v);
     const material = new THREE.LineBasicMaterial({color: "green"});
     return new THREE.Line(geometry, material);
   }, []);
 
-  const mouseEventStage = useRef<number>(0);
-
   const downHandler = () => {
-    mouseEventStage.current = 1;
+    clearSelectionFlag.current = true;
   };
   const upHandler = () => {
-    if (mouseEventStage.current === 1) {
-      mouseEventStage.current = 0;
-      if (selectedSpritRef.current) {
-        selectedSpritRef.current!.material.map = yellow_map;
+    if (clearSelectionFlag.current) {
+      clearSelectionFlag.current = false;
+      if (selectedSpriteRef.current) {
+        selectedSpriteRef.current!.material.map = YELLOW_AIRPLANE;
       }
-      selectedSpritRef.current = null;
+      selectedSpriteRef.current = null;
       p.setSelected(-1);
     }
   };
 
   const moveHandler = () => {
-    mouseEventStage.current = 0;
+    clearSelectionFlag.current = false;
   };
 
   return (
@@ -219,7 +233,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
         objectLat="latitude"
         objectLng="longitude"
         objectsData={p.stateVectors}
-        objectThreeObject={satObject}
+        objectThreeObject={planeObjGenerator}
         onObjectClick={onSelect}
         customLayerData={arcData ? arcData : []}
         customThreeObject={arcDrawer}

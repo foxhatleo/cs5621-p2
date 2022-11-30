@@ -14,7 +14,8 @@ const USERS: { username: string; password: string }[] = [
  * @param params Parameters for the request.
  * @param user For internal use. Use default value of 0.
  */
-export default async function makeReq<T = any>(uri: string, params: { [name: string]: any } = {}, user = 0): Promise<T | null> {
+export default async function makeReq<T = any>
+(uri: string, params: { [name: string]: any } = {}, user = 0): Promise<T | null> {
   // Remove "/" at the beginning of URI if exists.
   if (uri.startsWith("/")) uri = uri.substring(1);
 

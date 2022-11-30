@@ -3,11 +3,11 @@ import AirportsData from "../data/AirportsData";
 import {DetailedStateVector} from "../data/DetailedFlightData";
 import "./UI.css";
 
-export type UIProps = {
-  data: DetailedStateVector | null;
-  showing: boolean;
-};
-
+/**
+ * Get the friendly name of an airport by its ICAO identifier, if exists.
+ *
+ * @param k ICAO code or nll.
+ */
 const getFriendlyNameOfAirport = (k: string | null): string | null => {
   if (!k) return null;
   const res = AirportsData[k];
@@ -20,6 +20,14 @@ const getFriendlyNameOfAirport = (k: string | null): string | null => {
   return k;
 };
 
+export type UIProps = {
+  data: DetailedStateVector | null;
+  showing: boolean;
+};
+
+/**
+ * The UI Box at the bottom right corner.
+ */
 const UI: React.ComponentType<UIProps> = (p) => {
   const labels: { [label: string]: keyof DetailedStateVector } = {
     "ICAO24": "icao24",

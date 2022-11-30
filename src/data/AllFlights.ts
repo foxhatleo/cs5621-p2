@@ -64,7 +64,7 @@ async function getAllStateVectors(threshold = .2): Promise<StateVector[]> {
   const allStates = await makeReq("/states/all", {});
 
   if (!allStates) {
-    alert("Cannot get flight data. Rate limit may have been reached.");
+    alert("Cannot get flight data. Check your Internet connection, or the rate limit may have been reached.");
     return [];
   }
 
