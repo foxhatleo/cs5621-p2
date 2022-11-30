@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import Globe, {GlobeMethods} from "react-globe.gl";
 import {StateVector} from "../data/AllFlights";
 import * as THREE from "three";
@@ -77,14 +77,14 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     if (!globeRadius) return undefined;
     const material = new THREE.SpriteMaterial(
       {
-        map: YELLOW_AIRPLANE,
+        map: data.icao24 === p.selected?.icao24 ? GREEN_AIRPLANE : YELLOW_AIRPLANE,
         rotation: data.true_track ? -1 * (data.true_track * (Math.PI / 180)) : 0
       });
     const sprite = new THREE.Sprite(material);
     sprite.scale.set(2, 2, 2);
     spriteRefs.current[data.icao24] = sprite;
     return sprite;
-  }, [p.stateVectors]);
+  }, [p.stateVectors, p.selected]);
 
   /** Handler for selecting a plane. */
   const onSelect = (obj_untyped: unknown) => {
@@ -95,16 +95,16 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
       return;
     }
     console.log(`Select ind ${ind}.`);
-    const sp = spriteRefs.current[obj.icao24];
-    if (!sp) {
-      console.error("Could not find sprite when selecting.");
-      return;
-    }
-    sp.material.map = GREEN_AIRPLANE;
-    if (selectedSpriteRef.current) {
-      selectedSpriteRef.current!.material.map = YELLOW_AIRPLANE;
-    }
-    selectedSpriteRef.current = sp;
+    // const sp = spriteRefs.current[obj.icao24];
+    // if (!sp) {
+    //   console.error("Could not find sprite when selecting.");
+    //   return;
+    // }
+    // sp.material.map = GREEN_AIRPLANE;
+    // if (selectedSpriteRef.current) {
+    //   selectedSpriteRef.current!.material.map = YELLOW_AIRPLANE;
+    // }
+    // selectedSpriteRef.current = sp;
     p.setSelected(ind);
   };
 
@@ -120,7 +120,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     const radius = target.distanceTo(globe);
 
     const p = new Array(d.points).fill(null).map((_, i) => i + 1);
-    let points = p.map((x, _) => {
+    let points = p.map((x) => {
       const temp = target.clone().sub(source).multiplyScalar(x / d.points).add(source);
       return center.clone().add(temp.clone().sub(center).normalize().multiplyScalar(radius));
     });
@@ -189,7 +189,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
           source_alt: 0,
           target_lat: p.selected.latitude,
           target_lng: p.selected.longitude,
-          target_alt: 0.06, // NEEDS TO BE CHANGED
+          target_alt: p.selected.artificial_altitude,
           points: 200,
         };
         setArcData(arc(data));
@@ -210,10 +210,10 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
   const upHandler = () => {
     if (clearSelectionFlag.current) {
       clearSelectionFlag.current = false;
-      if (selectedSpriteRef.current) {
-        selectedSpriteRef.current!.material.map = YELLOW_AIRPLANE;
-      }
-      selectedSpriteRef.current = null;
+      // if (selectedSpriteRef.current) {
+      //   selectedSpriteRef.current!.material.map = YELLOW_AIRPLANE;
+      // }
+      // selectedSpriteRef.current = null;
       p.setSelected(-1);
     }
   };

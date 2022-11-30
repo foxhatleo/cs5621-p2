@@ -40,7 +40,7 @@ function stateToStateVector(item: any): StateVector {
     longitude: item[5],
     latitude: item[6],
     baro_altitude: item[7],
-    artificial_altitude: .05 + Math.random() * .025,
+    artificial_altitude: .01 + (item[7] ? item[7] / 20000 * .1 : 0),//.05 + Math.random() * .025,
     on_ground: item[8],
     velocity: item[9],
     true_track: item[10],
@@ -70,7 +70,7 @@ async function getAllStateVectors(threshold = .2): Promise<StateVector[]> {
 
   const res = (allStates.states as any[])
     .map<StateVector>(stateToStateVector)
-    .filter(s => !s.on_ground && s.longitude && s.latitude);
+    .filter(s => !s.on_ground && s.longitude !== null && s.latitude !== null);
 
   const thresholdRes = [];
   for (let i = 0, j = res.length * threshold; i < j; i++) {
