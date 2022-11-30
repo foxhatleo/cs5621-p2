@@ -54,7 +54,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     ...state,
     lat: state.latitude!,
     lng: state.longitude!,
-    alt: .05 + Math.random() * .025
+    alt: state.artificial_altitude
   })), [p.flights]);
 
   const spriteRefs = useRef<{[icao24: string]: Sprite}>({});
@@ -167,8 +167,29 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     return new THREE.Line(geometry, material)
   }, []);
 
+  const mouseEventStage = useRef<number>(0);
+
+  const downHandler = () => {
+    mouseEventStage.current = 1;
+  };
+  const upHandler = () => {
+    if (mouseEventStage.current === 1) {
+      mouseEventStage.current = 0;
+      setSelected(-1);
+      if (selectedSpritRef.current) {
+        selectedSpritRef.current!.material.map = yellow_map;
+      }
+      selectedSpritRef.current = null;
+      p.setSelected(-1);
+    }
+  }
+
+  const moveHandler = () => {
+    mouseEventStage.current = 0;
+  };
+
   return (
-    <div>
+    <div onMouseDown={downHandler} onMouseUp={upHandler} onMouseMove={moveHandler}>
       <Globe width={width}
              height={height}
              globeImageUrl="//cdn.jsdelivr.net/npm/three-globe/example/img/earth-night.jpg"
