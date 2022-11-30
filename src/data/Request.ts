@@ -4,6 +4,7 @@
  */
 const USERS: { username: string; password: string }[] = [
   {username: "wl353", password: "aby!jrw@xjm3hut2RCY"},
+  {username: "zw427", password: "e@knN8NxEmx4t5s"},
 ];
 
 /**

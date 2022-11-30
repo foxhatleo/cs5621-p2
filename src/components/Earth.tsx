@@ -20,6 +20,7 @@ export type EarthProps = {
   stateVectors: StateVector[];
   selected: DetailedStateVector | null;
   setSelected: (v: number) => void;
+  selecting: boolean;
 };
 
 const yellow_map = new THREE.TextureLoader().load("https://i.imgur.com/bb4rqmb.png");
@@ -72,7 +73,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     myGlobe.current?.pointOfView({altitude: 3.5});
   }, []);
 
-  const onSelect = useCallback((obj_untyped: unknown) => {
+  const onSelect = (obj_untyped: unknown) => {
     const obj = obj_untyped as StateVector;
     const ind = p.stateVectors.indexOf(obj);
     if (ind === -1) {
@@ -91,7 +92,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     }
     selectedSpritRef.current = sp;
     p.setSelected(ind);
-  }, [p.stateVectors]);
+  };
 
   function arc(d: any) {
     const s = myGlobe?.current!.getCoords(d.source_lat, d.source_lng, d.source_alt);
@@ -156,7 +157,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
 
   const [arcData, setArcData] = useState<null | THREE.Vector3[][]>(null);
   useEffect(() => {
-    if (!p.selected) setArcData([]);
+    if (!p.selected || !p.selecting) setArcData([]);
     else {
       const departureAirport = p.selected.estDepartureAirport;
       if (!departureAirport) {
@@ -179,7 +180,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
         setArcData(arc(data));
       }
     }
-  }, [p.selected]);
+  }, [p.selected, p.selecting]);
 
   const arcDrawer = useCallback((v: any) => {
     const geometry = new THREE.BufferGeometry().setFromPoints(v);

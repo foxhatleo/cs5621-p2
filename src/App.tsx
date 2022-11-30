@@ -60,7 +60,8 @@ function App() {
 
   return (
     <div className="App">
-      <Earth selected={detailedStateVector} stateVectors={stateVectors} setSelected={setSelected} />
+      <Earth selected={detailedStateVector} selecting={selectedIndex >= 0} stateVectors={stateVectors}
+        setSelected={setSelected} />
       <UI data={detailedStateVector} showing={selectedIndex >= 0} />
     </div>
   );
