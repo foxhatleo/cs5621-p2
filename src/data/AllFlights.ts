@@ -70,7 +70,7 @@ async function getAllStateVectors(threshold = .2): Promise<StateVector[]> {
 
   const res = (allStates.states as any[])
     .map<StateVector>(stateToStateVector)
-    .filter(s => !s.on_ground && s.longitude !== null && s.latitude !== null);
+    .filter(s => !s.on_ground && s.longitude && s.latitude && s.baro_altitude);
 
   const thresholdRes = [];
   for (let i = 0, j = res.length * threshold; i < j; i++) {
@@ -106,7 +106,7 @@ export async function updateAllStateVectors(orig: StateVector[]): Promise<StateV
   const newLst: StateVector[] = [];
   for (const origSV of orig) {
     const newSV = lookup[origSV.icao24];
-    if (newSV) newSV.artificial_altitude = origSV.artificial_altitude;
+    if (!newSV || !newSV.latitude || !newSV.longitude || !newSV.baro_altitude || newSV.on_ground) continue;
     newLst.push(newSV || origSV);
   }
 

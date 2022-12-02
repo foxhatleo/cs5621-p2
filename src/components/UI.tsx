@@ -35,6 +35,7 @@ const UI: React.ComponentType<UIProps> = (p) => {
     "Origin Country/Region": "origin_country",
     "Longitude": "longitude",
     "Latitude": "latitude",
+    "Altitude(m)": "baro_altitude",
     "Velocity": "velocity",
     "Heading": "true_track",
     "Departure Airport": "estDepartureAirport",
