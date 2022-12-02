@@ -41,8 +41,6 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
   const [globeRadius, setGlobeRadius] = useState<number>(0);
   /** Reference of the list of sprites for all airplanes. */
   const spriteRefs = useRef<{ [icao24: string]: Sprite }>({});
-  /** Reference of the sprite of the selected plane. */
-  const selectedSpriteRef = useRef<Sprite | null>(null);
   /** Data of the arc when a flight is selected. */
   const [arcData, setArcData] = useState<null | THREE.Vector3[][]>(null);
   /** A flag to help keep track when user interacts with the globe. */
@@ -95,16 +93,6 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
       return;
     }
     console.log(`Select ind ${ind}.`);
-    // const sp = spriteRefs.current[obj.icao24];
-    // if (!sp) {
-    //   console.error("Could not find sprite when selecting.");
-    //   return;
-    // }
-    // sp.material.map = GREEN_AIRPLANE;
-    // if (selectedSpriteRef.current) {
-    //   selectedSpriteRef.current!.material.map = YELLOW_AIRPLANE;
-    // }
-    // selectedSpriteRef.current = sp;
     p.setSelected(ind);
   };
 
@@ -153,7 +141,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     const radius_1 = r_1.distanceTo(source);
 
     const p_1 = new Array(d.points).fill(null).map((_, i) => i + 1);
-    const points_1 = p_1.map((x, _) => {
+    const points_1 = p_1.map((x) => {
       const temp = vec.clone().multiplyScalar(x / d.points).add(source);
       return r_1.clone().add(temp.sub(r_1).normalize().multiplyScalar(radius_1));
     });
@@ -210,10 +198,6 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
   const upHandler = () => {
     if (clearSelectionFlag.current) {
       clearSelectionFlag.current = false;
-      // if (selectedSpriteRef.current) {
-      //   selectedSpriteRef.current!.material.map = YELLOW_AIRPLANE;
-      // }
-      // selectedSpriteRef.current = null;
       p.setSelected(-1);
     }
   };

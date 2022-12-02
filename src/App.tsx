@@ -3,7 +3,8 @@ import Earth from "./components/Earth";
 import getAllStateVectors, {StateVector, updateAllStateVectors} from "./data/AllFlights";
 import UI from "./components/UI";
 import getDetailedStateVector, {
-  DetailedStateVector, getCachedDetailedStateVector,
+  DetailedStateVector,
+  getCachedDetailedStateVector,
   getPlaceholderDetailedStateVector
 } from "./data/DetailedFlightData";
 import "./App.css";
