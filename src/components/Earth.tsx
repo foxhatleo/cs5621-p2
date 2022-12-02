@@ -82,7 +82,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     sprite.scale.set(2, 2, 2);
     spriteRefs.current[data.icao24] = sprite;
     return sprite;
-  }, [p.stateVectors, p.selected]);
+  }, [p.stateVectors, p.selected, p.selecting]);
 
   /** Handler for selecting a plane. */
   const onSelect = (obj_untyped: unknown) => {
