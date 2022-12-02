@@ -75,7 +75,7 @@ const Earth: React.ComponentType<EarthProps> = (p) => {
     if (!globeRadius) return undefined;
     const material = new THREE.SpriteMaterial(
       {
-        map: data.icao24 === p.selected?.icao24 ? GREEN_AIRPLANE : YELLOW_AIRPLANE,
+        map: p.selecting && data.icao24 === p.selected?.icao24 ? GREEN_AIRPLANE : YELLOW_AIRPLANE,
         rotation: data.true_track ? -1 * (data.true_track * (Math.PI / 180)) : 0
       });
     const sprite = new THREE.Sprite(material);

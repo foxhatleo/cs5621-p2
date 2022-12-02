@@ -78,6 +78,10 @@ function App() {
   }, [stateVectors, selectedIcao]);
 
   const updateSelected = (v: number): void => {
+    if (v === -1) {
+      setSelectedIcao("");
+      updateToDateSelectedIcao.current = "";
+    }
     setSelectedIcao(stateVectors[v].icao24);
     updateToDateSelectedIcao.current = stateVectors[v].icao24;
   };
